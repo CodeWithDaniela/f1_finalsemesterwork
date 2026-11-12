@@ -1,9 +1,9 @@
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('f1-store-v1').then((cache) => {
+    caches.open('f1-store-v2').then((cache) => {
       return cache.addAll([
-        '/',
-        '/index.html'
+        './',
+        'index.html'
       ]);
     })
   );
