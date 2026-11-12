@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula 1</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Titillium+Web:ital,wght@0,400;0,700;0,900;1,700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        f1red: '#e10600',
+                        f1black: '#0b0b0e',
+                        f1dark: '#121212',
+                        f1card: '#1f1f1f',
+                        f1border: '#2e2e2e',
+                        f1gray: '#a1a1a1'
+                    },
+                    fontFamily: {
+                        f1: ['"Titillium Web"', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+        if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log("Service Worker registado com sucesso!"))
+      .catch((err) => console.log("Erro ao registar Service Worker:", err));
+  }
+    </script>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            background-color: #0b0b0e;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(225, 6, 0, 0.18), transparent 45%),
+                linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        .red-glow:hover {
+            box-shadow: 0 0 20px rgba(225, 6, 0, 0.4);
+        }
+
+        .driver-btn.active {
+            border-color: #e10600;
+            background-color: #e10600;
+            color: #ffffff;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #e10600;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-white font-sans min-h-screen flex flex-col justify-between selection:bg-f1red selection:text-white relative">
+
+    <!-- HEADER / NAVBAR AJUSTADA PARA TELEMÓVEL, TABLET E DESKTOP -->
+    <header class="sticky top-0 z-50 bg-f1dark/95 backdrop-blur-md border-b border-f1border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20 gap-2">
+                
+                <!-- Logo -->
+                <div class="flex items-center space-x-2 sm:space-x-3 cursor-pointer shrink-0" onclick="switchView('home')">
+                    <div class="bg-f1red text-white font-f1 font-black italic text-xl sm:text-2xl px-2.5 sm:px-3 py-1 rounded tracking-tighter transform -skew-x-12">
+                        F1
+                    </div>
+                    <h1 class="font-f1 text-lg sm:text-2xl font-black italic tracking-wider text-white hidden xs:block">
+                        FORMULA 1
+                    </h1>
+                </div>
+
+                <!-- Nav Links (Visível em Computador e Tablet em modo paisagem) -->
+                <nav class="hidden lg:flex space-x-6 xl:space-x-8 font-f1 text-base xl:text-lg font-bold tracking-wider uppercase">
+                    <button id="nav-home" onclick="switchView('home')" class="text-white hover:text-f1red transition-colors border-b-2 border-f1red pb-1">Home</button>
+                    <button id="nav-drivers" onclick="switchView('drivers')" class="text-gray-300 hover:text-f1red transition-colors border-b-2 border-transparent hover:border-f1red pb-1">Pilotos 2026</button>
+                    <a href="#news" onclick="switchView('home')" class="text-gray-300 hover:text-f1red transition-colors border-b-2 border-transparent hover:border-f1red pb-1">News</a>
+                    <a href="#standings" onclick="switchView('home')" class="text-gray-300 hover:text-f1red transition-colors border-b-2 border-transparent hover:border-f1red pb-1">Standings</a>
+                    <a href="https://piratetv.ws/formula-1" target="_blank" class="text-f1red hover:text-white transition-colors border-b-2 border-transparent hover:border-f1red pb-1 flex items-center space-x-1.5">
+                        <i class="fas fa-play-circle text-sm animate-pulse"></i>
+                        <span>Live Stream</span>
+                    </a>
+                </nav>
+
+                <!-- Search & Profile Icon -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    
+                    <!-- CAIXA DE PESQUISA (Flexível para telemóvel e desktop) -->
+                    <div class="relative flex-1 max-w-[180px] xs:max-w-[220px] sm:max-w-xs">
+                        <input id="search-input" type="text" oninput="handleSearch()" placeholder="Pesquisar..." class="bg-f1card border border-f1border text-xs sm:text-sm rounded-full py-2 pl-3.5 pr-8 sm:pl-4 sm:pr-10 focus:outline-none focus:border-f1red text-white placeholder-f1gray w-full transition-all duration-300">
+                        <i class="fas fa-search absolute right-3 top-2.5 text-xs sm:text-sm text-f1gray"></i>
+
+                        <!-- RESULTADOS DA PESQUISA -->
+                        <div id="search-results" class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-f1card border border-f1border rounded-xl shadow-2xl overflow-hidden z-50 custom-scrollbar max-h-96 divide-y divide-f1border">
+                        </div>
+                    </div>
+
+                    <!-- ÍCONE E MENU DE PERFIL DO UTILIZADOR -->
+                    <div class="relative shrink-0">
+                        <button id="user-btn" onclick="handleUserIconClick()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-f1card border border-f1border hover:border-f1red flex items-center justify-center text-white hover:text-f1red transition-all shadow-md font-f1 font-bold text-xs sm:text-sm">
+                            <i id="user-btn-icon" class="fas fa-user"></i>
+                        </button>
+
+                        <!-- DROPDOWN DE UTILIZADOR AUTENTICADO -->
+                        <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 bg-f1card border border-f1border rounded-xl shadow-2xl overflow-hidden z-50">
+                            <div class="p-4 border-b border-f1border">
+                                <p id="user-menu-name" class="font-f1 font-bold text-white text-base">Utilizador</p>
+                                <p id="user-menu-email" class="text-xs text-f1gray truncate">user@example.com</p>
+                            </div>
+                            <div class="p-2">
+                                <button onclick="logoutUser()" class="w-full text-left px-3 py-2 text-xs font-f1 font-bold text-f1red hover:bg-f1red/10 rounded-lg transition-colors flex items-center space-x-2">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Terminar Sessão</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- MENU SECUNDÁRIO PARA DISPOSITIVOS MÓVEIS (Sub-barra de navegação no telemóvel) -->
+            <div class="flex lg:hidden justify-around py-2.5 border-t border-f1border/60 font-f1 text-xs font-bold uppercase tracking-wider bg-f1dark/80">
+                <button onclick="switchView('home')" class="text-white hover:text-f1red">Home</button>
+                <button onclick="switchView('drivers')" class="text-gray-300 hover:text-f1red">Pilotos 2026</button>
+                <a href="#news" onclick="switchView('home')" class="text-gray-300 hover:text-f1red">Notícias</a>
+                <a href="#standings" onclick="switchView('home')" class="text-gray-300 hover:text-f1red">Classificação</a>
+                <a href="https://piratetv.ws/formula-1" target="_blank" class="text-f1red flex items-center gap-1">
+                    <i class="fas fa-play-circle text-[10px] animate-pulse"></i>
+                    <span>Live</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- MODAL DE AUTENTICAÇÃO (LOGIN / REGISTO) -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-f1card border border-f1border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative">
+            
+            <!-- Botão Fechar -->
+            <button onclick="toggleAuthModal()" class="absolute top-4 right-4 text-f1gray hover:text-white text-xl transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- Abas Login / Criar Conta -->
+            <div class="flex border-b border-f1border bg-f1dark/50">
+                <button id="tab-login-btn" onclick="switchAuthTab('login')" class="w-1/2 py-4 font-f1 font-bold text-base sm:text-lg text-f1red border-b-2 border-f1red transition-all uppercase tracking-wider">
+                    Iniciar Sessão
+                </button>
+                <button id="tab-register-btn" onclick="switchAuthTab('register')" class="w-1/2 py-4 font-f1 font-bold text-base sm:text-lg text-f1gray hover:text-white border-b-2 border-transparent transition-all uppercase tracking-wider">
+                    Criar Conta
+                </button>
+            </div>
+
+            <!-- Conteúdo da Modal -->
+            <div class="p-6 sm:p-8 space-y-6">
+                <div id="auth-feedback" class="hidden p-3 rounded-lg text-xs font-semibold text-center"></div>
+
+                <!-- FORMULÁRIO DE LOGIN -->
+                <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-f1 font-bold text-f1gray uppercase mb-1">Email</label>
+                        <input type="email" id="login-email" required placeholder="seu.email@exemplo.com" class="w-full bg-f1dark border border-f1border rounded-lg py-2.5 px-4 text-white text-sm focus:outline-none focus:border-f1red transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-f1 font-bold text-f1gray uppercase mb-1">Palavra-passe</label>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-f1dark border border-f1border rounded-lg py-2.5 px-4 text-white text-sm focus:outline-none focus:border-f1red transition-colors">
+                    </div>
+                    <button type="submit" class="w-full bg-f1red hover:bg-red-700 text-white font-f1 font-bold py-3 rounded-lg uppercase tracking-wider transition-all red-glow">
+                        Entrar na Conta
+                    </button>
+                </form>
+
+                <!-- FORMULÁRIO DE REGISTO -->
+                <form id="form-register" onsubmit="handleRegisterSubmit(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-f1 font-bold text-f1gray uppercase mb-1">Nome Completo</label>
+                        <input type="text" id="reg-name" required placeholder="O seu nome" class="w-full bg-f1dark border border-f1border rounded-lg py-2.5 px-4 text-white text-sm focus:outline-none focus:border-f1red transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-f1 font-bold text-f1gray uppercase mb-1">Email</label>
+                        <input type="email" id="reg-email" required placeholder="seu.email@exemplo.com" class="w-full bg-f1dark border border-f1border rounded-lg py-2.5 px-4 text-white text-sm focus:outline-none focus:border-f1red transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-f1 font-bold text-f1gray uppercase mb-1">Palavra-passe</label>
+                        <input type="password" id="reg-password" required placeholder="••••••••" class="w-full bg-f1dark border border-f1border rounded-lg py-2.5 px-4 text-white text-sm focus:outline-none focus:border-f1red transition-colors">
+                    </div>
+                    <button type="submit" class="w-full bg-f1red hover:bg-red-700 text-white font-f1 font-bold py-3 rounded-lg uppercase tracking-wider transition-all red-glow">
+                        Criar Nova Conta
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN HOME VIEW -->
+    <main id="view-home" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-grow space-y-8 sm:space-y-10 w-full">
+
+        <!-- HERO BANNER COM DADOS AUTOMÁTICOS DO GP -->
+        <section class="relative rounded-2xl overflow-hidden border border-f1border bg-f1card shadow-2xl">
+            <div class="absolute inset-0 bg-cover bg-center opacity-30 z-0" style="background-image: url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=1600&auto=format&fit=crop');"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-f1black via-f1black/90 to-transparent z-0"></div>
+
+            <div class="relative z-10 p-5 sm:p-10 lg:p-12 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
+                <div class="lg:col-span-7 space-y-3 sm:space-y-4">
+                    <div class="inline-flex items-center space-x-2 bg-f1red/20 border border-f1red text-f1red px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                        <span class="w-2 h-2 rounded-full bg-f1red animate-ping"></span>
+                        <span>Next Grand Prix</span>
+                    </div>
+                    
+                    <h2 id="gp-title" class="text-3xl sm:text-5xl lg:text-6xl font-f1 font-black italic tracking-tight uppercase leading-none text-white">
+                        CARREGANDO GP...
+                    </h2>
+                    
+                    <p class="text-f1gray text-sm sm:text-lg max-w-xl">
+                        A nova era dos regulamentos de 2026 arranca com força total. Motores Híbridos com combustível 100% sustentável e aerodinâmica ativa.
+                    </p>
+
+                    <div class="pt-2 sm:pt-4 flex flex-wrap gap-3 sm:gap-4">
+                        <a href="https://piratetv.ws/formula-1" target="_blank" class="bg-f1red hover:bg-red-700 text-white font-f1 font-bold px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg uppercase tracking-wider transition-all shadow-lg shadow-f1red/30 flex items-center space-x-2 red-glow">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Watch Live</span>
+                        </a>
+                        <button onclick="switchView('drivers')" class="bg-f1dark hover:bg-f1border border border-f1border text-white font-f1 font-bold px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-lg uppercase tracking-wider transition-all flex items-center space-x-2">
+                            <i class="fas fa-users"></i>
+                            <span>Ver Pilotos 2026</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- COUNTDOWN TIMER -->
+                <div class="lg:col-span-5 bg-f1dark/90 p-5 sm:p-6 rounded-xl border border-f1border backdrop-blur shadow-xl">
+                    <h3 class="text-xs font-f1 uppercase font-bold text-f1gray tracking-widest text-center mb-4">
+                        Qualifying Starts In
+                    </h3>
+                    
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div class="bg-f1card p-2.5 sm:p-3 rounded-lg border border-f1border">
+                            <span id="days" class="block font-f1 font-black text-2xl sm:text-3xl text-f1red">00</span>
+                            <span class="text-[10px] sm:text-xs text-f1gray uppercase">Days</span>
+                        </div>
+                        <div class="bg-f1card p-2.5 sm:p-3 rounded-lg border border-f1border">
+                            <span id="hours" class="block font-f1 font-black text-2xl sm:text-3xl text-white">00</span>
+                            <span class="text-[10px] sm:text-xs text-f1gray uppercase">Hours</span>
+                        </div>
+                        <div class="bg-f1card p-2.5 sm:p-3 rounded-lg border border-f1border">
+                            <span id="minutes" class="block font-f1 font-black text-2xl sm:text-3xl text-white">00</span>
+                            <span class="text-[10px] sm:text-xs text-f1gray uppercase">Mins</span>
+                        </div>
+                        <div class="bg-f1card p-2.5 sm:p-3 rounded-lg border border-f1border">
+                            <span id="seconds" class="block font-f1 font-black text-2xl sm:text-3xl text-f1red">00</span>
+                            <span class="text-[10px] sm:text-xs text-f1gray uppercase">Secs</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-f1border flex justify-between items-center text-xs text-f1gray">
+                        <span id="gp-location" class="flex items-center gap-1"><i class="fas fa-map-marker-alt text-f1red"></i> A carregar...</span>
+                        <span id="gp-laps" class="flex items-center gap-1"><i class="fas fa-route text-f1red"></i> A carregar...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEWS FEED & STANDINGS -->
+        <div id="news" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <section class="lg:col-span-2 space-y-6">
+                <div class="border-b border-f1border pb-3 flex justify-between items-center">
+                    <h2 class="text-xl sm:text-2xl font-f1 font-black uppercase italic tracking-wider text-white flex items-center">
+                        <span class="w-2 h-5 sm:h-6 bg-f1red inline-block mr-2.5 sm:mr-3"></span>
+                        Últimas Notícias F1
+                    </h2>
+                    <span id="news-status" class="text-[10px] sm:text-xs text-f1gray animate-pulse">A carregar últimas notícias...</span>
+                </div>
+
+                <div id="news-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- NOTÍCIA ANTONELLI -->
+                    <article class="bg-f1card rounded-xl overflow-hidden border border-f1border hover:border-f1red transition-all duration-300 flex flex-col justify-between group red-glow">
+                        <a href="https://motorsport.uol.com.br/f1/news/f1-antonelli-temia-bater-nas-ultimas-voltas-do-gp-do-mexico-ja-estava-chorando/10871028/" target="_blank" class="block h-full">
+                            <div>
+                                <div class="relative overflow-hidden h-44 sm:h-48">
+                                    <img src="images/kimiantonellicar.jpeg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Antonelli GP México" onerror="this.src='https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=800&auto=format&fit=crop'">
+                                    <span class="absolute top-3 left-3 bg-f1red text-white text-[10px] sm:text-xs font-f1 font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 uppercase rounded">Mercedes</span>
+                                </div>
+                                <div class="p-4 sm:p-5 space-y-2">
+                                    <span class="text-xs text-f1gray">GP do México</span>
+                                    <h3 class="font-f1 font-bold text-lg sm:text-xl text-white group-hover:text-f1red transition-colors">
+                                        F1 - Antonelli temia bater nas últimas voltas do GP do México: "Já estava chorando"
+                                    </h3>
+                                    <p class="text-xs sm:text-sm text-f1gray">
+                                        Italiano também revelou que quer enquadrar momento com Hamilton e Verstappen no pódio.
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+
+                    <!-- NOTÍCIA MAX VERSTAPPEN -->
+                    <article class="bg-f1card rounded-xl overflow-hidden border border-f1border hover:border-f1red transition-all duration-300 flex flex-col justify-between group red-glow">
+                        <a href="https://motorsport.uol.com.br/f1/news/f1-verstappen-duelo-entre-leclerc-e-hamilton-acabou-custando-a-vitoria-para-eles/10871086/" target="_blank" class="block h-full">
+                            <div>
+                                <div class="relative overflow-hidden h-44 sm:h-48">
+                                    <img src="images/maxverstappencar2.jpg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Red Bull Verstappen" onerror="this.src='https://images.unsplash.com/photo-1541348263662-e082662d82da?q=80&w=800&auto=format&fit=crop'">
+                                    <span class="absolute top-3 left-3 bg-f1red text-white text-[10px] sm:text-xs font-f1 font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 uppercase rounded">Red Bull</span>
+                                </div>
+                                <div class="p-4 sm:p-5 space-y-2">
+                                    <span class="text-xs text-f1gray">Análise de Corrida</span>
+                                    <h3 class="font-f1 font-bold text-lg sm:text-xl text-white group-hover:text-f1red transition-colors">
+                                        F1: Verstappen diz que duelo entre Leclerc e Hamilton "custou a vitória para eles"
+                                    </h3>
+                                    <p class="text-xs sm:text-sm text-f1gray">
+                                        Holandês aponta que a disputa interna da Ferrari abriu caminho para a sua recuperação no topo.
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+
+                </div>
+            </section>
+
+            <!-- STANDINGS -->
+            <section id="standings" class="space-y-6">
+                <div class="border-b border-f1border pb-3">
+                    <h2 class="text-xl sm:text-2xl font-f1 font-black uppercase italic tracking-wider text-white flex items-center">
+                        <span class="w-2 h-5 sm:h-6 bg-f1red inline-block mr-2.5 sm:mr-3"></span>
+                        Classificação Atual 2026
+                    </h2>
+                </div>
+
+                <div id="standings-container" class="bg-f1card rounded-xl border border-f1border overflow-hidden divide-y divide-f1border shadow-xl">
+                    <!-- Gerado dinamicamente -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- PILOTOS SECTION -->
+    <main id="view-drivers" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-grow space-y-6 sm:space-y-8 w-full hidden">
+        
+        <div class="flex items-center space-x-2 overflow-x-auto pb-2 border-b border-f1border custom-scrollbar">
+            <span class="text-xs font-f1 uppercase font-bold text-f1gray mr-2 shrink-0">Grelha 2026:</span>
+            <button onclick="showDriver('hamilton')" id="btn-hamilton" class="driver-btn active px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-f1border bg-f1card text-xs sm:text-sm font-f1 font-bold transition-all shrink-0">#44 Hamilton</button>
+            <button onclick="showDriver('verstappen')" id="btn-verstappen" class="driver-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-f1border bg-f1card text-xs sm:text-sm font-f1 font-bold transition-all shrink-0">#1 Verstappen</button>
+            <button onclick="showDriver('leclerc')" id="btn-leclerc" class="driver-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-f1border bg-f1card text-xs sm:text-sm font-f1 font-bold transition-all shrink-0">#16 Leclerc</button>
+            <button onclick="showDriver('norris')" id="btn-norris" class="driver-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-f1border bg-f1card text-xs sm:text-sm font-f1 font-bold transition-all shrink-0">#4 Norris</button>
+            <button onclick="showDriver('russell')" id="btn-russell" class="driver-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-f1border bg-f1card text-xs sm:text-sm font-f1 font-bold transition-all shrink-0">#63 Russell</button>
+            <button onclick="showDriver('antonelli')" id="btn-antonelli" class="driver-btn px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-f1border bg-f1card text-xs sm:text-sm font-f1 font-bold transition-all shrink-0">#12 Antonelli</button>
+        </div>
+
+        <div class="bg-f1card rounded-2xl border border-f1border overflow-hidden shadow-2xl p-5 sm:p-8 space-y-6 sm:space-y-8">
+            <div class="relative h-52 sm:h-96 rounded-xl overflow-hidden border border-f1border">
+                <img id="driver-hero-img" src="images/lewisbanner.jpeg" class="w-full h-full object-cover" alt="Driver Banner">
+                <div class="absolute inset-0 bg-gradient-to-t from-f1card via-transparent to-black/40"></div>
+                <div class="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 flex justify-between items-end z-10">
+                    <div>
+                        <span id="driver-team-tag" class="bg-f1red text-white text-[10px] sm:text-xs font-f1 font-black px-2.5 py-0.5 sm:px-3 sm:py-1 rounded uppercase tracking-widest">Scuderia Ferrari</span>
+                        <h2 id="driver-full-name" class="text-2xl sm:text-6xl font-f1 font-black italic uppercase tracking-wider text-white mt-1 sm:mt-2">LEWIS HAMILTON</h2>
+                    </div>
+                    <span id="driver-number-hero" class="text-4xl sm:text-8xl font-f1 font-black italic text-f1red opacity-80">44</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+                <div class="lg:col-span-4 bg-f1dark p-5 sm:p-6 rounded-xl border border-f1border flex flex-col items-center text-center space-y-4">
+                    <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-f1red shadow-xl">
+                        <img id="driver-avatar" src="images/lewishamiltonface.jpg" class="w-full h-full object-cover" alt="Driver Avatar">
+                    </div>
+
+                    <div>
+                        <h3 id="driver-card-name" class="text-xl sm:text-2xl font-f1 font-bold text-white">Lewis Hamilton</h3>
+                        <p id="driver-card-team" class="text-f1red font-semibold text-xs sm:text-sm">Scuderia Ferrari (2026)</p>
+                    </div>
+
+                    <div class="w-full pt-4 border-t border-f1border space-y-3 text-xs sm:text-sm text-left">
+                        <div class="flex justify-between">
+                            <span class="text-f1gray">Nacionalidade:</span>
+                            <span id="driver-country" class="font-bold text-white">🇬🇧 Reino Unido</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-f1gray">Carro #:</span>
+                            <span id="driver-number" class="font-bold text-f1red">44</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-f1gray">Idade:</span>
+                            <span id="driver-age" class="font-bold text-white">41 Anos</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-f1gray">GP Estreia:</span>
+                            <span id="driver-entry" class="font-bold text-white">Austrália 2007</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-8 space-y-6 flex flex-col justify-between">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                        <div class="bg-f1dark p-3 sm:p-4 rounded-xl border border-f1border text-center">
+                            <span class="text-[10px] sm:text-xs text-f1gray uppercase font-f1">Títulos Mundiais</span>
+                            <span id="stat-titles" class="block text-2xl sm:text-3xl font-f1 font-black text-f1red mt-1">7</span>
+                        </div>
+                        <div class="bg-f1dark p-3 sm:p-4 rounded-xl border border-f1border text-center">
+                            <span class="text-[10px] sm:text-xs text-f1gray uppercase font-f1">Vitórias GP</span>
+                            <span id="stat-wins" class="block text-2xl sm:text-3xl font-f1 font-black text-white mt-1">105</span>
+                        </div>
+                        <div class="bg-f1dark p-3 sm:p-4 rounded-xl border border-f1border text-center">
+                            <span class="text-[10px] sm:text-xs text-f1gray uppercase font-f1">Pódios</span>
+                            <span id="stat-podiums" class="block text-2xl sm:text-3xl font-f1 font-black text-white mt-1">201</span>
+                        </div>
+                        <div class="bg-f1dark p-3 sm:p-4 rounded-xl border border-f1border text-center">
+                            <span class="text-[10px] sm:text-xs text-f1gray uppercase font-f1">Pole Positions</span>
+                            <span id="stat-poles" class="block text-2xl sm:text-3xl font-f1 font-black text-f1red mt-1">104</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-f1dark p-5 sm:p-6 rounded-xl border border-f1border space-y-3">
+                        <h4 class="text-base sm:text-lg font-f1 font-bold text-white border-b border-f1border pb-2 flex items-center">
+                            <i class="fas fa-flag-checkered text-f1red mr-2"></i> Perfil &amp; Época 2026
+                        </h4>
+                        <p id="driver-bio" class="text-f1gray text-xs sm:text-base leading-relaxed">
+                            Em 2026, Lewis Hamilton protagoniza a maior transferência da história da Fórmula 1 ao competir pela Scuderia Ferrari. Procura conquistar o seu 8.º título mundial sob a nova regulamentação de motores ecológicos e aerodinâmica ativa.
+                        </p>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-f1red to-red-900 p-4 rounded-xl border border-f1red flex items-center justify-between text-white shadow-lg">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-trophy text-xl sm:text-2xl text-yellow-400"></i>
+                            <div>
+                                <span class="text-[10px] sm:text-xs font-f1 uppercase tracking-wider block opacity-80">Destaque 2026</span>
+                                <span id="driver-highlight" class="font-f1 font-bold text-xs sm:text-base">Primeiro ano oficial de contrato com a Ferrari no novo regulamento.</span>
+                            </div>
+                        </div>
+                        <a href="https://piratetv.ws/formula-1" target="_blank" class="bg-black hover:bg-f1dark text-white text-xs font-f1 font-bold px-4 py-2 rounded uppercase border border-white/20 transition-all shrink-0 hidden sm:block">
+                            Ver em Ação
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-f1dark border-t border-f1border mt-12 sm:mt-16 text-f1gray">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
+            <div class="flex items-center space-x-3">
+                <span class="bg-f1red text-white font-f1 font-black italic px-2 py-0.5 rounded">F1</span>
+                <span>Formula 1 Portal &copy; 2026. All rights reserved.</span>
+            </div>
+            <div class="flex space-x-4">
+                <a href="https://piratetv.ws/formula-1" target="_blank" class="text-f1red hover:underline">Watch Live</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- INTERACTIVE JAVASCRIPT ENGINE -->
+    <script>
+        let currentUser = JSON.parse(localStorage.getItem('f1_user')) || null;
+
+        function updateUIForUser() {
+            const userBtn = document.getElementById('user-btn');
+
+            if (currentUser) {
+                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                userBtn.innerHTML = initials;
+                userBtn.classList.add('bg-f1red', 'border-f1red');
+                document.getElementById('user-menu-name').innerText = currentUser.name;
+                document.getElementById('user-menu-email').innerText = currentUser.email;
+            } else {
+                userBtn.innerHTML = '<i class="fas fa-user"></i>';
+                userBtn.classList.remove('bg-f1red', 'border-f1red');
+            }
+        }
+
+        function handleUserIconClick() {
+            if (currentUser) {
+                const menu = document.getElementById('user-menu');
+                menu.classList.toggle('hidden');
+            } else {
+                toggleAuthModal();
+            }
+        }
+
+        function toggleAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            modal.classList.toggle('hidden');
+            document.getElementById('auth-feedback').classList.add('hidden');
+        }
+
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('form-login');
+            const regForm = document.getElementById('form-register');
+            const loginBtn = document.getElementById('tab-login-btn');
+            const regBtn = document.getElementById('tab-register-btn');
+            const feedback = document.getElementById('auth-feedback');
+
+            feedback.classList.add('hidden');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                loginBtn.className = "w-1/2 py-4 font-f1 font-bold text-base sm:text-lg text-f1red border-b-2 border-f1red transition-all uppercase tracking-wider";
+                regBtn.className = "w-1/2 py-4 font-f1 font-bold text-base sm:text-lg text-f1gray hover:text-white border-b-2 border-transparent transition-all uppercase tracking-wider";
+            } else {
+                regForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                regBtn.className = "w-1/2 py-4 font-f1 font-bold text-base sm:text-lg text-f1red border-b-2 border-f1red transition-all uppercase tracking-wider";
+                loginBtn.className = "w-1/2 py-4 font-f1 font-bold text-base sm:text-lg text-f1gray hover:text-white border-b-2 border-transparent transition-all uppercase tracking-wider";
+            }
+        }
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const feedback = document.getElementById('auth-feedback');
+
+            currentUser = {
+                name: email.split('@')[0].replace('.', ' '),
+                email: email
+            };
+
+            localStorage.setItem('f1_user', JSON.stringify(currentUser));
+
+            feedback.innerText = "Sessão iniciada com sucesso!";
+            feedback.className = "p-3 rounded-lg text-xs font-semibold text-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            feedback.classList.remove('hidden');
+
+            setTimeout(() => {
+                toggleAuthModal();
+                updateUIForUser();
+            }, 1000);
+        }
+
+        function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const feedback = document.getElementById('auth-feedback');
+
+            currentUser = { name: name, email: email };
+            localStorage.setItem('f1_user', JSON.stringify(currentUser));
+
+            feedback.innerText = "Conta criada com sucesso!";
+            feedback.className = "p-3 rounded-lg text-xs font-semibold text-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            feedback.classList.remove('hidden');
+
+            setTimeout(() => {
+                toggleAuthModal();
+                updateUIForUser();
+            }, 1000);
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            localStorage.removeItem('f1_user');
+            document.getElementById('user-menu').classList.add('hidden');
+            updateUIForUser();
+        }
+
+        const f1Schedule2026 = [
+            { name: "SÃO PAULO GRAND PRIX", location: "Autódromo de Interlagos 🇧🇷", laps: "71 Laps", date: "2026-11-08T17:00:00" },
+            { name: "LAS VEGAS GRAND PRIX", location: "Las Vegas Strip Circuit 🇺🇸", laps: "50 Laps", date: "2026-11-22T06:00:00" },
+            { name: "QATAR GRAND PRIX", location: "Lusail International Circuit 🇶🇦", laps: "57 Laps", date: "2026-11-29T17:00:00" },
+            { name: "ABU DHABI GRAND PRIX", location: "Yas Marina Circuit 🇦🇪", laps: "58 Laps", date: "2026-12-06T13:00:00" }
+        ];
+
+        const standings2026 = [
+            { key: "hamilton", name: "Lewis Hamilton", team: "Scuderia Ferrari #44", points: 25, color: "bg-red-600" },
+            { key: "verstappen", name: "Max Verstappen", team: "Red Bull Racing #1", points: 18, color: "bg-blue-600" },
+            { key: "leclerc", name: "Charles Leclerc", team: "Scuderia Ferrari #16", points: 15, color: "bg-red-600" },
+            { key: "norris", name: "Lando Norris", team: "McLaren F1 Team #4", points: 12, color: "bg-orange-500" },
+            { key: "russell", name: "George Russell", team: "Mercedes-AMG #63", points: 10, color: "bg-emerald-400" },
+            { key: "antonelli", name: "Kimi Antonelli", team: "Mercedes-AMG #12", points: 8, color: "bg-emerald-400" }
+        ];
+
+        const drivers2026 = {
+            hamilton: {
+                fullName: "LEWIS HAMILTON", cardName: "Lewis Hamilton", team: "Scuderia Ferrari", teamTag: "Scuderia Ferrari",
+                number: "44", country: "🇬🇧 Reino Unido", age: "41 Anos", entry: "Austrália 2007",
+                titles: "7", wins: "105", podiums: "201", poles: "104",
+                heroImg: "images/lewisbanner.jpeg", avatar: "images/lewishamiltonface.jpg",
+                bio: "Em 2026, Lewis Hamilton protagoniza a maior transferência da história da Fórmula 1 ao competir pela Scuderia Ferrari. Procura conquistar o seu 8.º título mundial sob a nova regulamentação de motores com 50% de potência elétrica e combustível 100% sustentável.",
+                highlight: "Primeiro ano oficial com a Ferrari sob o novo regulamento técnico."
+            },
+            verstappen: {
+                fullName: "MAX VERSTAPPEN", cardName: "Max Verstappen", team: "Red Bull Racing", teamTag: "Red Bull Racing",
+                number: "1", country: "🇳🇱 Países Baixos", age: "29 Anos", entry: "Austrália 2015",
+                titles: "4", wins: "63", podiums: "111", poles: "40",
+                heroImg: "images/verstappenbanner.jpeg", avatar: "images/maxverstappenface.jpg",
+                bio: "Líder da Red Bull Racing na nova era de motores Red Bull Ford Powertrains. Conhecido pela sua agressividade e precisão cirúrgica no controlo do monolugar.",
+                highlight: "Estreia dos motores Red Bull Ford em pista oficial na época de 2026."
+            },
+            leclerc: {
+                fullName: "CHARLES LECLERC", cardName: "Charles Leclerc", team: "Scuderia Ferrari", teamTag: "Scuderia Ferrari",
+                number: "16", country: "🇲🇨 Mónaco", age: "29 Anos", entry: "Austrália 2018",
+                titles: "0", wins: "8", podiums: "41", poles: "26",
+                heroImg: "images/lelercbanner.jpeg", avatar: "images/charlesleclercface.jpeg",
+                bio: "O prodígio monegasco divide a garagem da Ferrari com Lewis Hamilton em 2026, formando uma das duplas mais fortes e competitivas da história da F1.",
+                highlight: "Disputa direta pelo estatuto de campeão da Ferrari em 2026."
+            },
+            norris: {
+                fullName: "LANDO NORRIS", cardName: "Lando Norris", team: "McLaren F1 Team", teamTag: "McLaren F1 Team",
+                number: "4", country: "🇬🇧 Reino Unido", age: "27 Anos", entry: "Austrália 2019",
+                titles: "0", wins: "4", podiums: "27", poles: "8",
+                heroImg: "images/landobanner.jpeg", avatar: "images/landonorrisface.jpeg",
+                bio: "Pilar da McLaren na luta pelos campeonatos mundiais. Um piloto extremamente rápido na qualificação e de forte consistência em ritmo de corrida.",
+                highlight: "McLaren procura manter o domínio com a nova aerodinâmica ativa."
+            },
+            russell: {
+                fullName: "GEORGE RUSSELL", cardName: "George Russell", team: "Mercedes-AMG F1", teamTag: "Mercedes-AMG F1",
+                number: "63", country: "🇬🇧 Reino Unido", age: "28 Anos", entry: "Austrália 2019",
+                titles: "0", wins: "8", podiums: "32", poles: "12",
+                heroImg: "images/russellbanner.jpeg", avatar: "images/georgerussellface.jpeg",
+                bio: "Como líder consolidado da Mercedes na era de 2026, George Russell assume o papel de piloto principal da equipa alemã, focado em disputar o título mundial com a nova geração de unidades de potência.",
+                highlight: "Piloto principal da Mercedes a liderar o desenvolvimento do monolugar sob o regulamento de 2026."
+            },
+            antonelli: {
+                fullName: "KIMI ANTONELLI", cardName: "Kimi Antonelli", team: "Mercedes-AMG F1", teamTag: "Mercedes-AMG F1",
+                number: "12", country: "🇮🇹 Itália", age: "20 Anos", entry: "Austrália 2025",
+                titles: "1", wins: "9", podiums: "19", poles: "7",
+                heroImg: "images/antonellibanner.jpg", avatar: "images/kimiantonelliface.jpeg",
+                bio: "A nova estrela da Mercedes que assumiu a responsabilidade de liderar a formação alemã na era pós-Hamilton.",
+                highlight: "Foco total na adaptação aos novos motores híbridos da Mercedes."
+            }
+        };
+
+        let activeGpName = "";
+
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const resultsBox = document.getElementById('search-results');
+
+            if (query.length === 0) {
+                resultsBox.classList.add('hidden');
+                resultsBox.innerHTML = "";
+                return;
+            }
+
+            let matches = [];
+
+            Object.keys(drivers2026).forEach(key => {
+                const d = drivers2026[key];
+                if (d.fullName.toLowerCase().includes(query) || d.team.toLowerCase().includes(query) || d.number.includes(query)) {
+                    matches.push({
+                        type: 'Piloto',
+                        title: d.cardName,
+                        subtitle: `${d.team} (#${d.number})`,
+                        action: () => {
+                            showDriver(key);
+                            switchView('drivers');
+                        }
+                    });
+                }
+            });
+
+            f1Schedule2026.forEach(gp => {
+                if (gp.name.toLowerCase().includes(query) || gp.location.toLowerCase().includes(query)) {
+                    matches.push({
+                        type: 'Grand Prix',
+                        title: gp.name,
+                        subtitle: gp.location,
+                        action: () => {
+                            switchView('home');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    });
+                }
+            });
+
+            if (matches.length > 0) {
+                resultsBox.innerHTML = matches.map((item, index) => `
+                    <div onclick="selectSearchResult(${index})" class="p-3 hover:bg-f1border/40 cursor-pointer transition-colors flex items-center justify-between">
+                        <div>
+                            <div class="text-xs sm:text-sm font-bold text-white">${item.title}</div>
+                            <div class="text-[10px] sm:text-xs text-f1gray">${item.subtitle}</div>
+                        </div>
+                        <span class="text-[9px] sm:text-[10px] bg-f1red/20 border border-f1red text-f1red px-2 py-0.5 rounded uppercase font-bold">${item.type}</span>
+                    </div>
+                `).join('');
+                
+                window.currentSearchMatches = matches;
+                resultsBox.classList.remove('hidden');
+            } else {
+                resultsBox.innerHTML = `<div class="p-4 text-xs text-f1gray text-center">Nenhum resultado encontrado para "${query}"</div>`;
+                resultsBox.classList.remove('hidden');
+            }
+        }
+
+        function selectSearchResult(index) {
+            if (window.currentSearchMatches && window.currentSearchMatches[index]) {
+                window.currentSearchMatches[index].action();
+                document.getElementById('search-results').classList.add('hidden');
+                document.getElementById('search-input').value = "";
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const searchInput = document.getElementById('search-input');
+            const searchResults = document.getElementById('search-results');
+            const userBtn = document.getElementById('user-btn');
+            const userMenu = document.getElementById('user-menu');
+
+            if (searchInput && searchResults && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+
+            if (userBtn && userMenu && !userBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        async function fetchLatestNews() {
+            const statusEl = document.getElementById('news-status');
+            const container = document.getElementById('news-container');
+            const rssUrl = encodeURIComponent('https://motorsport.uol.com.br/rss/f1/news/');
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.status === 'ok' && data.items && data.items.length > 0) {
+                    statusEl.innerText = 'Feed ao vivo do Motorsport UOL';
+                    statusEl.classList.remove('animate-pulse');
+
+                    const existingContent = container.innerHTML;
+                    let fetchedHtml = "";
+
+                    const newArticles = data.items.slice(0, 4);
+
+                    newArticles.forEach(item => {
+                        let imgUrl = item.thumbnail || item.enclosure?.link;
+                        if (!imgUrl) {
+                            const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
+                            imgUrl = imgMatch ? imgMatch[1] : 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=800&auto=format&fit=crop';
+                        }
+
+                        const cleanDesc = item.description.replace(/<[^>]*>?/gm, '').slice(0, 110) + '...';
+
+                        fetchedHtml += `
+                            <article class="bg-f1card rounded-xl overflow-hidden border border-f1border hover:border-f1red transition-all duration-300 flex flex-col justify-between group red-glow">
+                                <a href="${item.link}" target="_blank" class="block h-full">
+                                    <div>
+                                        <div class="relative overflow-hidden h-44 sm:h-48">
+                                            <img src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Notícia F1" onerror="this.src='https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=800&auto=format&fit=crop'">
+                                            <span class="absolute top-3 left-3 bg-f1red text-white text-[10px] sm:text-xs font-f1 font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 uppercase rounded">Motorsport UOL</span>
+                                        </div>
+                                        <div class="p-4 sm:p-5 space-y-2">
+                                            <span class="text-xs text-f1gray">Última Hora</span>
+                                            <h3 class="font-f1 font-bold text-lg sm:text-xl text-white group-hover:text-f1red transition-colors">
+                                                ${item.title}
+                                            </h3>
+                                            <p class="text-xs sm:text-sm text-f1gray">
+                                                ${cleanDesc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </article>
+                        `;
+                    });
+
+                    container.innerHTML = fetchedHtml + existingContent;
+                } else {
+                    statusEl.innerText = 'Notícias guardadas';
+                }
+            } catch (error) {
+                console.log('Erro ao carregar RSS:', error);
+                statusEl.innerText = 'Notícias guardadas';
+            }
+        }
+
+        function renderStandings() {
+            const container = document.getElementById('standings-container');
+            if (!container) return;
+
+            standings2026.sort((a, b) => b.points - a.points);
+
+            let html = "";
+            standings2026.forEach((driver, index) => {
+                const rank = index + 1;
+                const posClass = rank === 1 ? "text-f1red" : "text-f1gray";
+
+                html += `
+                    <div class="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-f1border/30 transition-colors" onclick="showDriver('${driver.key}'); switchView('drivers');">
+                        <div class="flex items-center space-x-3">
+                            <span class="font-f1 font-black text-lg sm:text-xl ${posClass} w-5">${rank}</span>
+                            <div class="w-1.5 h-7 sm:h-8 ${driver.color} rounded-full"></div>
+                            <div>
+                                <h4 class="font-f1 font-bold text-sm sm:text-base text-white">${driver.name}</h4>
+                                <span class="text-[10px] sm:text-xs text-f1gray">${driver.team}</span>
+                            </div>
+                        </div>
+                        <span class="font-f1 font-black text-lg sm:text-xl text-white">${driver.points} PTS</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateCountdownAndGp() {
+            const now = new Date();
+            let nextGp = f1Schedule2026.find(gp => new Date(gp.date) > now);
+
+            if (!nextGp) {
+                nextGp = f1Schedule2026[f1Schedule2026.length - 1];
+            }
+
+            if (activeGpName !== nextGp.name) {
+                activeGpName = nextGp.name;
+                document.getElementById('gp-title').innerHTML = `${nextGp.name} <span class="text-f1red">2026</span>`;
+                document.getElementById('gp-location').innerHTML = `<i class="fas fa-map-marker-alt text-f1red"></i> ${nextGp.location}`;
+                document.getElementById('gp-laps').innerHTML = `<i class="fas fa-route text-f1red"></i> ${nextGp.laps}`;
+            }
+
+            const targetTime = new Date(nextGp.date).getTime();
+            const distance = targetTime - now.getTime();
+
+            if (distance < 0) {
+                document.getElementById('days').innerText = "00";
+                document.getElementById('hours').innerText = "00";
+                document.getElementById('minutes').innerText = "00";
+                document.getElementById('seconds').innerText = "00";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = days < 10 ? '0' + days : days;
+            document.getElementById('hours').innerText = hours < 10 ? '0' + hours : hours;
+            document.getElementById('minutes').innerText = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('seconds').innerText = seconds < 10 ? '0' + seconds : seconds;
+        }
+
+        function switchView(view) {
+            const homeView = document.getElementById('view-home');
+            const driversView = document.getElementById('view-drivers');
+            const navHome = document.getElementById('nav-home');
+            const navDrivers = document.getElementById('nav-drivers');
+
+            if (view === 'drivers') {
+                homeView.classList.add('hidden');
+                driversView.classList.remove('hidden');
+                if (navHome && navDrivers) {
+                    navHome.classList.replace('border-f1red', 'border-transparent');
+                    navHome.classList.replace('text-white', 'text-gray-300');
+                    navDrivers.classList.replace('border-transparent', 'border-f1red');
+                    navDrivers.classList.replace('text-gray-300', 'text-white');
+                }
+            } else {
+                driversView.classList.add('hidden');
+                homeView.classList.remove('hidden');
+                if (navHome && navDrivers) {
+                    navDrivers.classList.replace('border-f1red', 'border-transparent');
+                    navDrivers.classList.replace('text-white', 'text-gray-300');
+                    navHome.classList.replace('border-transparent', 'border-f1red');
+                    navHome.classList.replace('text-gray-300', 'text-white');
+                }
+            }
+        }
+
+        function showDriver(driverKey) {
+            const driver = drivers2026[driverKey];
+            if (!driver) return;
+
+            document.querySelectorAll('.driver-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`btn-${driverKey}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            document.getElementById('driver-hero-img').src = driver.heroImg;
+            document.getElementById('driver-team-tag').innerText = driver.teamTag;
+            document.getElementById('driver-full-name').innerText = driver.fullName;
+            document.getElementById('driver-number-hero').innerText = driver.number;
+
+            document.getElementById('driver-avatar').src = driver.avatar;
+            document.getElementById('driver-card-name').innerText = driver.cardName;
+            document.getElementById('driver-card-team').innerText = driver.team;
+            document.getElementById('driver-country').innerText = driver.country;
+            document.getElementById('driver-number').innerText = driver.number;
+            document.getElementById('driver-age').innerText = driver.age;
+            document.getElementById('driver-entry').innerText = driver.entry;
+
+            document.getElementById('stat-titles').innerText = driver.titles;
+            document.getElementById('stat-wins').innerText = driver.wins;
+            document.getElementById('stat-podiums').innerText = driver.podiums;
+            document.getElementById('stat-poles').innerText = driver.poles;
+
+            document.getElementById('driver-bio').innerText = driver.bio;
+            document.getElementById('driver-highlight').innerText = driver.highlight;
+        }
+
+        window.onload = function() {
+            updateUIForUser();
+            renderStandings();
+            updateCountdownAndGp();
+            setInterval(updateCountdownAndGp, 1000);
+            fetchLatestNews();
+            showDriver('hamilton');
+        };
+    </script>
+</body>
+</html>
