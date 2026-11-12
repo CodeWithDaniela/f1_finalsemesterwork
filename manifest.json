@@ -1,7 +1,8 @@
 {
   "name": "Formula 1 2026 Portal",
   "short_name": "F1 2026",
-  "start_url": "./",
+  "start_url": "/f1_finalsemesterwork/index.html",
+  "scope": "/f1_finalsemesterwork/",
   "display": "standalone",
   "background_color": "#0b0b0e",
   "theme_color": "#e10600",
